@@ -14,5 +14,4 @@ def index(name: str, age :int=0):
 
 @app.post('/post_page')
 def post_page(person_data: Person):
-    return person_data    
-    
+    return person_data        
