@@ -1,17 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI , Body
 from pydantic import BaseModel
 
-class Person(BaseModel):
-    name : str
-    age: int
-    hirgt: int | None = None
+class Postcreate(BaseModel):
+    title: str
+    content: str
 
 app = FastAPI()
 
-@app.get('/home/{name}')
-def index(name: str, age :int=0):
-    return {'message': f" hi  {name} {age} yers old"}
+@app.get('/post/{slug}')
+async def get_post(slug: str):
+    return {"slug": slug}
 
-@app.post('/post_page')
-def post_page(person_data: Person):
-    return person_data        
+
+@app.post('/post/create')
+async def create_post(post: Postcreate = Body()):
+    return post
+
