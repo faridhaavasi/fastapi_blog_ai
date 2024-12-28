@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import exceptions
 from db.models import User
-from schema.jwt import JWTResponsePayload
-from schema.output import RegisterOutput
+from schemas.jwt import JWTResponsePayload
+from schemas.output import RegisterOutput
 from utils.jwt import JWTHandler
 from utils.secrets import password_manager
 
