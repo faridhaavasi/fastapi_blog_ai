@@ -35,3 +35,14 @@ def update_name(id: int, name: str):
             item['name'] = name  
             return {'message': 'Updated successfully'}
     return {'message': 'Name not found'} 
+
+@app.delete('/names/{id}')
+def delelte_name(id: int):
+    for index, item in enumerate(names):
+        if item['id'] == id:
+            del names[index]  
+            return {'message': 'Deleted successfully'}
+    
+    return {'message': 'Name not found'}   
+
+
