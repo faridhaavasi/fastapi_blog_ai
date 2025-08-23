@@ -1,5 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from users.models import UserModel
 
-class BaseSchema(BaseModel):
-    id : int
+class UserLoginSchema(BaseModel):
+    email : str = Field(..., description="email of the user")
+    password : str = Field(..., description="password of the user")
 
+
+
+class UserStartRegisterSchema(BaseModel):
+    email: str = Field(..., description="email of the user")
