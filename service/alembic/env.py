@@ -44,6 +44,9 @@ else:
 # target_metadata = mymodel.Base.metadata
 
 target_metadata = Base.metadata
+from users.models import Usermodel, TokenModel
+
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
