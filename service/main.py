@@ -1,5 +1,5 @@
 from fastapi import FastAPI 
-
+from users.routes import router as user_routes
 
 app = FastAPI(
      title="Blog Application",
@@ -10,6 +10,8 @@ app = FastAPI(
     ),
     version="1.0.0",
 )
+
+app.include_router(user_routes)
 
 
 
