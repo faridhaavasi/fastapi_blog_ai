@@ -13,5 +13,5 @@ router = APIRouter(prefix="/users_api", tags=["users_api_v1"])
 
 
 @router.post("set_email/")
-async def set_email(requset: SetEmailSchema):
+async def set_email(requset: SetEmailSchema, db: Session = Depends(get_db)):
     return {}
