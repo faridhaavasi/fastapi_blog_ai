@@ -1,8 +1,6 @@
-from fastapi import FastAPI 
-
+from fastapi import FastAPI
+from authenticaion import routes as auth_route
 
 app = FastAPI()
 
-@app.get('/')
-async def index():
-    return {}
+app.include_router(auth_route.router)   
