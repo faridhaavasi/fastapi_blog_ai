@@ -21,12 +21,16 @@ class UserModel(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+
+    username = Column(String, nullable=True)
     
     email = Column(String, nullable=False, unique=True)
     
     password = Column(String, nullable=False)
     
     is_active = Column(Boolean, default=False)
+
+    is_admin = Column(Boolean, default=False)
     
     created_date = Column(DateTime, server_default=func.now())
     
