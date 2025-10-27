@@ -45,7 +45,7 @@ else:
 
 target_metadata = Base.metadata
 
-from service.user.api.v1.models import UserModel, TokenModel
+from user.api.v1.models import UserModel, TokenModel
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
