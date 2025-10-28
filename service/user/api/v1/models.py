@@ -11,7 +11,7 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+from service.core.database import Base
 
 from passlib.context import CryptContext
 
@@ -26,7 +26,7 @@ class UserModel(Base):
     
     email = Column(String, nullable=False, unique=True)
     
-    password = Column(String, nullable=False)
+    password = Column(String, nullable=True)
     
     is_active = Column(Boolean, default=False)
 
