@@ -1,9 +1,12 @@
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
-from core.database import Base
+from service.core.database import Base
 from pathlib import Path
 from dotenv import load_dotenv
 
