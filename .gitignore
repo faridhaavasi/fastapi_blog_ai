@@ -178,3 +178,6 @@ pyrightconfig.json
 
 # vscode
 .vscode
+
+# Pycharm
+.idea
