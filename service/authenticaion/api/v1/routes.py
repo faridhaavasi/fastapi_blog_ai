@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Query, Path, Depends, HTTPException
+from fastapi import APIRouter, status, Query, Path, Depends, HTTPException, Response
 
 from fastapi.responses import JSONResponse
 
@@ -12,7 +12,8 @@ from service.core.email_util import send_email
 
 from .schemas import (
     SetEmailInputSchema,
-    RegisterFinallySchema
+    RegisterFinallySchema,
+    SetTokenSchema
 
 )
 
@@ -23,7 +24,6 @@ from service.auth.jwt_auth import (
     decode_refresh_token,
     generate_verify_token,
     decode_verify_token,
-
 )
 
 router = APIRouter(prefix="/auth/api/v1", tags=["authentication_api_v1"])
@@ -85,7 +85,7 @@ async def verify_email(verify_token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/register/finally")
-async def register_fin(request: RegisterFinallySchema, db: Session = Depends(get_db)):
+async def register_fin(request: RegisterFinallySchema, response: Response, db: Session = Depends(get_db)):
     try:
         user_id = decode_refresh_token(request.token)
     except Exception:
@@ -108,11 +108,40 @@ async def register_fin(request: RegisterFinallySchema, db: Session = Depends(get
     db.commit()
     db.refresh(user_obj)
 
+    jwt_access_token = generate_access_token(user_id)
+    jwt_refresh_token = generate_refresh_token(user_id)
+
+    response.set_cookie(key='jwt_access_token', value=jwt_access_token)
+    response.set_cookie(key='jwt_refresh_token', value=jwt_refresh_token)
+
     return JSONResponse(
         content={"detail": "Registration completed successfully"},
         status_code=status.HTTP_200_OK
     )
 
+
+@router.post("/register/set_token", status_code=status.HTTP_200_OK)
+async def set_token(request: SetTokenSchema, response: Response, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter_by(email=request.email).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="somthing went wrong"
+        )
+
+    if user.verify_password(request.password) is False:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="email or password is wrong"
+        )
+
+    jwt_access_token = generate_access_token(user.id)
+    jwt_refresh_token = generate_refresh_token(user.id)
+
+    response.set_cookie(key='jwt_access_token', value=jwt_access_token)
+    response.set_cookie(key='jwt_refresh_token', value=jwt_refresh_token)
+
+    return {"detail": "Tokens are set successfully"}
 
 
 
