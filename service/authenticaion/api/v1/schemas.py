@@ -18,3 +18,8 @@ class RegisterFinallySchema(BaseModel):
         if self.password != self.confer_password:
             raise ValueError("Passwords do not match")
         return self
+
+
+class SetTokenSchema(BaseModel):
+    email : EmailStr = Field(..., description="Please enter your mail")
+    password : EmailStr = Field(..., description="Please enter your mail")
