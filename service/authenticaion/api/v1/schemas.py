@@ -22,4 +22,4 @@ class RegisterFinallySchema(BaseModel):
 
 class SetTokenSchema(BaseModel):
     email : EmailStr = Field(..., description="Please enter your mail")
-    password : EmailStr = Field(..., description="Please enter your mail")
+    password : str = Field(..., description="Please enter your mail")
