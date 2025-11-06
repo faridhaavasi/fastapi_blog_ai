@@ -25,4 +25,8 @@ router = APIRouter(prefix="/post/api/v1", tags=["post_api_v1"])
 
 @router.post('/create_post', status_code=status.HTTP_201_CREATED)
 async def user_create_post(request: UserCreatePostSchema, db: Session = Depends(get_db)):
-    return {'detail': 'we are online...'}
+    keywords = get_keywords(request.description)
+    new_post = PostModel(user_id= 1, title=request.title, description=request.description, tags=keywords)
+    db.add(new_post)
+    db.commit()
+    return {'detail': 'new post is created.'}
