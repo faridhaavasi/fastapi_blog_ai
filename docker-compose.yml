@@ -73,7 +73,8 @@ services:
     environment:
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
       JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
-      REDIS_URL: redis://redis:6379 
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8000:8000"
     command: bash -c 'fastapi dev --host 0.0.0.0 --port 8000'
@@ -91,24 +92,34 @@ services:
     environment:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
-    command: celery -A service.worker.celery_app worker --loglevel=info
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
+      REDIS_URL: redis://redis:6379/0
+    working_dir: /usr/src
+    command: bash -c "celery -A service.celery_config.celery_conf worker --loglevel=info"
     volumes:
       - ./service:/usr/src/service
 
-    celery_beat:
-      build:
-        context: .
-        dockerfile: Dockerfile.dev
-      container_name: celery_beat
-      depends_on:
-        - backend
-        - redis
-      environment:
-        CELERY_BROKER_URL: redis://redis:6379/0
-        CELERY_RESULT_BACKEND: redis://redis:6379/0
-      command: celery -A service.worker.celery_app beat --loglevel=info
-      volumes:
-        - ./service:/usr/src/service
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: celery_beat
+    depends_on:
+      - backend
+      - redis
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
+      REDIS_URL: redis://redis:6379/0
+    working_dir: /usr/src
+    command: bash -c "celery -A service.celery_config.celery_conf beat --loglevel=info"
+    volumes:
+      - ./service:/usr/src/service
 
 
 volumes:

@@ -13,16 +13,15 @@ from service.AI.AI_func import get_keywords
 # database
 from service.core.database import Session, mongo_db
 
+
 @celery_app.task
 def create_new_post(user, title, description):
-    db: Session = next(get_db())
-    try:
-        keywords = get_keywords(description)
-        new_post = PostModel(user_id=user.id, title=title, description=description, tags=keywords)
-        db.add(new_post)
-        db.commit()
-        print("===============================")
-        print(f"new post was created, title: {title} and tags: {keywords}.")
-        print("===============================")
-    finally:
-        db.close()
+    db = Session()
+    keywords = get_keywords(description)
+    new_post = PostModel(user_id=user.id, title=title, description=description, tags=keywords)
+    db.add(new_post)
+    db.commit()
+    print("===============================")
+    print(f"new post was created, title: {title} and tags: {keywords}.")
+    print("===============================")
+    db.close()

@@ -1,5 +1,6 @@
 # Python
 import os
+from dotenv import load_dotenv
 
 # Sqlalchemy
 from sqlalchemy import create_engine
@@ -10,6 +11,8 @@ from pymongo import MongoClient
 
 # config
 from .config import settings
+
+load_dotenv()
 
 # Postgres
 engine = create_engine(
