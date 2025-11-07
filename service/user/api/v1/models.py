@@ -30,6 +30,8 @@ class UserModel(Base):
     
     is_active = Column(Boolean, default=False)
 
+    is_verified = Column(Boolean, default=False)
+
     is_admin = Column(Boolean, default=False)
     
     created_date = Column(DateTime, server_default=func.now())

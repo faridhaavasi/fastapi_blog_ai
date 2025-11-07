@@ -5,11 +5,13 @@ from service.core.database import get_db
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta,timezone
 import jwt
-from jwt.exceptions import DecodeError, InvalidSignatureError
+from jwt import ExpiredSignatureError, InvalidSignatureError, DecodeError
 from service.core.config import settings
 
 security = HTTPBearer(auto_error=False)
 
+SECRET_KEY = settings.JWT_SECRET_KEY
+ALGO = "HS256"
 
 
 def get_authenticated_user(
@@ -27,7 +29,7 @@ def get_authenticated_user(
     token = credentials.credentials
     try:
         decoded = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms="HS256"
+            token, settings.JWT_SECRET_KEY, algorithms=ALGO
         )
         user_id = decoded.get("user_id", None)
         if not user_id:
@@ -74,7 +76,7 @@ def generate_access_token(user_id: int, expires_in: int = 60 * 5) -> str:
         "iat": now,
         "exp": now + timedelta(seconds=expires_in),
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=ALGO)
 
 
 def generate_refresh_token(user_id: int, expires_in: int = 3600 * 24) -> str:
@@ -128,3 +130,24 @@ def decode_refresh_token(token):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed, {e}",
         )
+
+
+
+def generate_verify_token(user_id: int, expires_minutes: int = 30) -> str:
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(minutes=expires_minutes)
+    payload = {"type": "verify", "purpose": "verify_email", "user_id": user_id, "iat": now, "exp": exp}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGO)
+
+def decode_verify_token(token: str) -> int:
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGO])
+        if decoded.get("type") != "verify" or decoded.get("purpose") != "verify_email":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token purpose")
+        return decoded.get("user_id")
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except InvalidSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature")
+    except DecodeError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token decode failed")
