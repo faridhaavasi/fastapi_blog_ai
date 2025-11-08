@@ -34,7 +34,7 @@ def get_db() -> Session:
 
 
 # Mongodb
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:mongo@mongodb:27017/mydb")
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin")
 client = MongoClient(MONGO_URL)
 mongo_db = client.get_database()
 

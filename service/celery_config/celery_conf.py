@@ -15,11 +15,12 @@ celery_app = Celery(
     backend=REDIS_URL
 )
 
-celery_app.conf.beat_schedule = {
-    "sample-task": {
-        "task": "service.celery_config.celery_task.sample_task",
-        "schedule": 10.0,  # every 10 seconds
-    },
-}
+# celery_app.conf.beat_schedule = {
+#     "sample-task": {
+#         "task": "service.celery_config.celery_task.sample_task",
+#         "schedule": 10.0,  # every 10 seconds
+#     },
+# }
+
 celery_app.conf.timezone = "UTC"
 celery_app.autodiscover_tasks(["service.celery_config.celery_task"])

@@ -43,11 +43,13 @@ async def user_create_post(request: UserCreatePostSchema, jwt_access_token: str 
     if user:
         create_new_post.delay(user.id, request.title, request.description)
         return {'detail': 'your new post will be created soon.'}
-    raise HTTPException(detail='we couldn\'t verify you with provided credentials.')
+    raise HTTPException(detail='we couldn\'t verify you with provided credentials.',
+                        status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 @router.get('/create_mongo_object', status_code=status.HTTP_201_CREATED)
-async def create_mongo_object(user: UserModel = Depends(get_authenticated_user)):
+async def create_mongo_object(jwt_access_token: str = Cookie(None), db: Session=Depends(get_db)):
+    user = get_user_via_access_token(jwt_access_token, db)
     mongo_db.liked_tags.insert_one(
         {
             'id':user.id,
@@ -69,7 +71,7 @@ async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session=Depen
 async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
     user = get_user_via_access_token(jwt_access_token, db)
     if user:
-        return mongo_db.liked_tags.find()
+        return mongo_db.liked_tags.find({},{'_id':0}).to_list()
     raise HTTPException(detail='we couldn\'t verify you with provided credentials.')
 
 
