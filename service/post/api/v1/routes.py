@@ -68,7 +68,7 @@ async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session=Depen
 
 
 @router.get('/get_mongo_object', status_code=status.HTTP_200_OK)
-async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+async def get_mongo_object( jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
     user = get_user_via_access_token(jwt_access_token, db)
     if user:
         return mongo_db.liked_tags.find({},{'_id':0}).to_list()

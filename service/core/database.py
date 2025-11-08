@@ -14,7 +14,9 @@ from .config import settings
 
 load_dotenv()
 
-# Postgres
+"""
+    POSTGRESQL_DB
+"""
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URL,
 
@@ -33,8 +35,15 @@ def get_db() -> Session:
         db.close()
 
 
-# Mongodb
+"""
+    MONGO_DB
+"""
+# getting the Mongodb url from .env
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin")
+
+# creating mongodb client
 client = MongoClient(MONGO_URL)
+
+# setting the db to the database you set in your MONGO_URL in .env file
 mongo_db = client.get_database()
 

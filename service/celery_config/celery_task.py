@@ -12,8 +12,13 @@ from service.AI.AI_func import get_keywords
 from service.core.database import SessionLocal, mongo_db
 
 
+# Celery Tasks
 @celery_app.task
 def create_new_post(user_id, title, description):
+    """
+    this function is used to skip the waiting time
+     for the user till creating the new post.
+    """
     db = SessionLocal()
     try:
         keywords = get_keywords(description)
