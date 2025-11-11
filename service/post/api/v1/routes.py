@@ -74,6 +74,17 @@ async def get_mongo_object( jwt_access_token: str = Cookie(None), db: Session = 
         return mongo_db.liked_tags.find({},{'_id':0}).to_list()
     raise HTTPException(detail='we couldn\'t verify you with provided credentials.')
 
+@router.get('/get_post/{post_id}/', status_code=status.HTTP_200_OK)
+async def get_mongo_object(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+    user = get_user_via_access_token(jwt_access_token)
+    if user:
+        post = db.query(PostModel).filter_by(id=post_id).one_or_none()
+        if post:
+            return post
+        raise HTTPException(detail='we couldn\'t find the post.',
+                            status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(detail='we couldn\'t verify you with provided credentials.',
+                            status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 
