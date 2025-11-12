@@ -18,6 +18,9 @@ Create a `.env` file in the **root directory** of the project (where `Dockerfile
 ```env
 SQLALCHEMY_DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/db_name
 JWT_SECRET_KEY=supersecretkey
+REDIS_URL=redis://redis:6379/0
+MONGO_URL=mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
+OPENAI_API_KEY= YOUR OPENAI API KEY
 ```
 ### 3 — Create Python Virtual Environment
 

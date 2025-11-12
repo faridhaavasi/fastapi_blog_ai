@@ -181,3 +181,5 @@ pyrightconfig.json
 
 # Pycharm
 .idea
+
+mongo/data/

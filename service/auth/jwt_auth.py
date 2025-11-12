@@ -7,6 +7,7 @@ from datetime import datetime, timedelta,timezone
 import jwt
 from jwt import ExpiredSignatureError, InvalidSignatureError, DecodeError
 from service.core.config import settings
+import time
 
 security = HTTPBearer(auto_error=False)
 
@@ -151,3 +152,15 @@ def decode_verify_token(token: str) -> int:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature")
     except DecodeError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token decode failed")
+
+
+
+
+def get_user_via_access_token(jwt_token_access_token, db: Session):
+    payload = jwt.decode(jwt_token_access_token, settings.JWT_SECRET_KEY, algorithms=ALGO)
+    if payload['exp'] < int(time.time()):
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail='Token expired')
+    user = db.query(UserModel).filter_by(id=payload['user_id']).one_or_none()
+    if user:
+        return user
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
