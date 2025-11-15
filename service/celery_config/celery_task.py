@@ -41,17 +41,17 @@ def create_new_post(user_id, title, description):
 
 
 @celery_app.task
-def update_post(post_id, title, description):
+def update_user_post(post_id, title, description):
     """
     this function is used to skip the waiting time
      for the user till creating the new post.
     """
     db = SessionLocal()
     try:
-        post = db.query(PostModel).filter_by(id=post_id)
-        if title:
+        post = db.query(PostModel).filter_by(id=post_id).one_or_none()
+        if title is not None:
             post.title = title
-        if description:
+        if description is not None:
             post.description = description
             post.tags = get_keywords(description)
         db.commit()

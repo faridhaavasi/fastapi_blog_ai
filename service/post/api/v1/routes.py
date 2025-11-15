@@ -17,13 +17,14 @@ from .schemas import (
     UserUpdatePostSchema,
     UserCreateCommentSchema,
     GetAllPostSchema,
+    GetAllPostCommentsSchema,
 )
 
 # post app models
 from .models import PostModel, LikeModel, CommentModel
 
 # celery tasks
-from service.celery_config.celery_task import create_new_post, update_post
+from service.celery_config.celery_task import create_new_post, update_user_post
 
 # JWT
 from service.auth.jwt_auth import get_user_via_access_token
@@ -73,9 +74,9 @@ async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session=Depen
                         status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-@router.get('/get_post/{post_id}/', status_code=status.HTTP_200_OK)
+@router.get('/get_post/{post_id}/', status_code=status.HTTP_200_OK, response_model=GetAllPostSchema)
 async def get_post_via_id(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
-    user = get_user_via_access_token(jwt_access_token)
+    user = get_user_via_access_token(jwt_access_token, db)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
         if post:
@@ -89,12 +90,12 @@ async def get_post_via_id(post_id: int, jwt_access_token: str = Cookie(None), db
 @router.put('/update_post/{post_id}/', status_code=status.HTTP_201_CREATED)
 async def update_post(request: UserUpdatePostSchema, post_id: int, jwt_access_token: str = Cookie(None),
                       db: Session = Depends(get_db)):
-    user = get_user_via_access_token(jwt_access_token)
+    user = get_user_via_access_token(jwt_access_token, db)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
         if post:
             if post.user_id == user.id:
-                update_post.delay(post.id, request.title, request.description)
+                update_user_post.delay(post.id, request.title, request.description)
                 return {'detail': 'your changes will be published soon.'}
             raise HTTPException(detail='this post is not yours.',
                                 status_code=status.HTTP_403_FORBIDDEN)
@@ -106,7 +107,7 @@ async def update_post(request: UserUpdatePostSchema, post_id: int, jwt_access_to
 
 @router.delete('/delete_post/{post_id}/', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
-    user = get_user_via_access_token(jwt_access_token)
+    user = get_user_via_access_token(jwt_access_token, db)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
         if post:
@@ -124,11 +125,11 @@ async def delete_post(post_id: int, jwt_access_token: str = Cookie(None), db: Se
 
 @router.get('/like_post/{post_id}/', status_code=status.HTTP_200_OK)
 async def create_delete_like(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
-    user = get_user_via_access_token(jwt_access_token)
+    user = get_user_via_access_token(jwt_access_token, db)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
         if post:
-            like_relation = db.query(LikeModel).filter_by(user_id=user.id, post_id=post.id)
+            like_relation = db.query(LikeModel).filter_by(user_id=user.id, post_id=post.id).one_or_none()
             if not like_relation:
                 new_like_relation = LikeModel(user_id=user.id, post_id=post.id)
                 db.add(new_like_relation)
@@ -149,7 +150,7 @@ async def create_delete_like(post_id: int, jwt_access_token: str = Cookie(None),
 
 @router.post('/comment_post/{post_id}/', status_code=status.HTTP_201_CREATED)
 async def create_comment(request: UserCreateCommentSchema, post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
-    user = get_user_via_access_token(jwt_access_token)
+    user = get_user_via_access_token(jwt_access_token, db)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
         if post:
@@ -157,6 +158,20 @@ async def create_comment(request: UserCreateCommentSchema, post_id: int, jwt_acc
             db.add(new_comment)
             db.commit()
             return {'detail': f'you commented on post {post.id}.'}
+        raise HTTPException(detail='we couldn\'t find the post',
+                            status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(detail='we couldn\'t verify you with provided credentials.',
+                        status_code=status.HTTP_401_UNAUTHORIZED)
+
+
+@router.get('/get_post_comment/{post_id}/', status_code=status.HTTP_200_OK, response_model=List[GetAllPostCommentsSchema])
+async def get_post_comment(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+    user = get_user_via_access_token(jwt_access_token, db)
+    if user:
+        post = db.query(PostModel).filter_by(id=post_id).one_or_none()
+        if post:
+            comments = db.query(CommentModel).filter_by(post_id=post_id).all()
+            return comments
         raise HTTPException(detail='we couldn\'t find the post',
                             status_code=status.HTTP_404_NOT_FOUND)
     raise HTTPException(detail='we couldn\'t verify you with provided credentials.',

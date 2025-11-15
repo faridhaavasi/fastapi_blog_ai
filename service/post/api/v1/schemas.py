@@ -6,8 +6,8 @@ class UserCreatePostSchema(BaseModel):
     description: str = Field(..., description='please enter your post\'s description')
 
 class UserUpdatePostSchema(BaseModel):
-    title: str = Field(description='please enter your post\'s title')
-    description: str = Field(description='please enter your post\'s description')
+    title: str = Field(default=None, description='please enter your post\'s title')
+    description: str = Field(default=None, description='please enter your post\'s description')
 
 class GetAllPostSchema(BaseModel):
     id: int
@@ -18,3 +18,7 @@ class GetAllPostSchema(BaseModel):
 
 class UserCreateCommentSchema(BaseModel):
     comment: str = Field(..., description='please enter your comment')
+
+class GetAllPostCommentsSchema(BaseModel):
+    user_id: int
+    comment: str
