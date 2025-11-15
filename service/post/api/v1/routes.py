@@ -2,9 +2,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Cookie
 from typing import List
 
-# JWT
-from service.auth.jwt_auth import get_authenticated_user
-
 # Database (postgresql)
 from service.core.database import get_db
 
@@ -24,9 +21,6 @@ from .schemas import (
 
 # post app models
 from .models import PostModel, LikeModel, CommentModel
-
-# user app models
-from service.user.api.v1.models import UserModel
 
 # celery tasks
 from service.celery_config.celery_task import create_new_post, update_post
@@ -62,8 +56,21 @@ async def user_create_post(request: UserCreatePostSchema, jwt_access_token: str 
 async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session=Depends(get_db)):
     user = get_user_via_access_token(jwt_access_token, db)
     if user:
-        return db.query(PostModel).all()
-    raise HTTPException(detail='we couldn\'t verify you with provided credentials.')
+        all_posts = db.query(PostModel).all()
+        user_liked_tags = mongo_db.liked_tags.find_one({'id': user.id}, {'_id': 0})['tags']
+        recommended_post_list_id = []
+        for post in all_posts:
+            tags_in_common = len(set(post.tags) & set(user_liked_tags))
+            recommended_count = 0
+            if tags_in_common > 0 and recommended_count < 2:
+                recommended_post_list_id.append(post.id)
+                recommended_count += 1
+            elif tags_in_common == 0:
+                recommended_post_list_id.append(post.id)
+                recommended_count = 0
+        return [post for post in all_posts if post.id in recommended_post_list_id]
+    raise HTTPException(detail='we couldn\'t verify you with provided credentials.',
+                        status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 @router.get('/get_post/{post_id}/', status_code=status.HTTP_200_OK)
@@ -98,7 +105,7 @@ async def update_post(request: UserUpdatePostSchema, post_id: int, jwt_access_to
 
 
 @router.delete('/delete_post/{post_id}/', status_code=status.HTTP_204_NO_CONTENT)
-async def get_mongo_object(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+async def delete_post(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
     user = get_user_via_access_token(jwt_access_token)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()
@@ -116,12 +123,32 @@ async def get_mongo_object(post_id: int, jwt_access_token: str = Cookie(None), d
 
 
 @router.get('/like_post/{post_id}/', status_code=status.HTTP_200_OK)
-async def get_mongo_object(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
-    pass
+async def create_delete_like(post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+    user = get_user_via_access_token(jwt_access_token)
+    if user:
+        post = db.query(PostModel).filter_by(id=post_id).one_or_none()
+        if post:
+            like_relation = db.query(LikeModel).filter_by(user_id=user.id, post_id=post.id)
+            if not like_relation:
+                new_like_relation = LikeModel(user_id=user.id, post_id=post.id)
+                db.add(new_like_relation)
+                db.commit()
+                user_liked_tags = mongo_db.liked_tags.find_one({'id':user.id},{'_id':0})['tags']
+                updated_tags = list(set(user_liked_tags + post.tags))
+                mongo_db.liked_tags.update_one({'id':user.id},{'$set':{'tags': updated_tags}})
+                return {'detail': 'the liked this post.'}
+            db.delete(like_relation)
+            db.commit()
+            return HTTPException(detail='your like relation is removed.',
+                        status_code=status.HTTP_204_NO_CONTENT)
+        raise HTTPException(detail='we couldn\'t find the post',
+                            status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(detail='we couldn\'t verify you with provided credentials.',
+                        status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 @router.post('/comment_post/{post_id}/', status_code=status.HTTP_201_CREATED)
-async def get_mongo_object(request: UserCreateCommentSchema, post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
+async def create_comment(request: UserCreateCommentSchema, post_id: int, jwt_access_token: str = Cookie(None), db: Session = Depends(get_db)):
     user = get_user_via_access_token(jwt_access_token)
     if user:
         post = db.query(PostModel).filter_by(id=post_id).one_or_none()

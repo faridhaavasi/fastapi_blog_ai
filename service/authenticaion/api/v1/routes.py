@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from service.user.api.v1.models import UserModel, TokenModel
 
-from service.core.database import get_db
+from service.core.database import get_db, mongo_db
 
 from service.core.email_util import send_email
 
@@ -107,6 +107,8 @@ async def register_fin(request: RegisterFinallySchema, response: Response, db: S
 
     db.commit()
     db.refresh(user_obj)
+
+    mongo_db.liked_tags.insert_one({'id':user_id, 'tags':[]})
 
     jwt_access_token = generate_access_token(user_id)
     jwt_refresh_token = generate_refresh_token(user_id)
