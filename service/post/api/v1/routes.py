@@ -60,13 +60,13 @@ async def get_all_posts( jwt_access_token: str = Cookie(None), db: Session=Depen
         all_posts = db.query(PostModel).all()
         user_liked_tags = mongo_db.liked_tags.find_one({'id': user.id}, {'_id': 0})['tags']
         recommended_post_list_id = []
+        recommended_count = 0
         for post in all_posts:
             tags_in_common = len(set(post.tags) & set(user_liked_tags))
-            recommended_count = 0
             if tags_in_common > 0 and recommended_count < 2:
                 recommended_post_list_id.append(post.id)
                 recommended_count += 1
-            elif tags_in_common == 0:
+            elif tags_in_common == 0 and recommended_count >= 1:
                 recommended_post_list_id.append(post.id)
                 recommended_count = 0
         return [post for post in all_posts if post.id in recommended_post_list_id]
