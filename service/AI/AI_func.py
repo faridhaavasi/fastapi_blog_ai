@@ -3,7 +3,7 @@ from .AI_conf import openai_client
 
 
 # get keywords from AI
-def get_keywords(description: str):
+def get_keywords(description: str) -> str:
     """
     Send request to OpenAI API and return keywords as a list of strings.
     """

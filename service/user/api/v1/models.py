@@ -67,6 +67,4 @@ class TokenModel(Base):
     
     user = relationship("UserModel", uselist=False)
     
-    
-
 
