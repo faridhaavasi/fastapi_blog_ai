@@ -5,7 +5,7 @@ WORKDIR /usr/src/service
 
 COPY ./requirements.txt .
 
-RUN pip install -i https://mirror-pypi.runflare.com/simple --no-cache-dir --upgrade -r ./requirements.txt
+RUN pip install -r requirements.txt
 
 COPY ./service .
 

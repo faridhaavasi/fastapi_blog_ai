@@ -14,7 +14,7 @@ from service.core.database import SessionLocal, mongo_db
 
 # Celery Tasks
 @celery_app.task
-def create_new_post(user_id, title, description):
+def create_new_post(user_id: int, title: str, description: str):
     """
     this function is used to skip the waiting time
      for the user till creating the new post.
@@ -32,6 +32,31 @@ def create_new_post(user_id, title, description):
         db.commit()
         print("===============================")
         print(f"New post created, title: {title}, tags: {keywords}.")
+        print("===============================")
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Celery task failed: {e}")
+    finally:
+        db.close()
+
+
+@celery_app.task
+def update_user_post(post_id, title, description):
+    """
+    this function is used to skip the waiting time
+     for the user till creating the new post.
+    """
+    db = SessionLocal()
+    try:
+        post = db.query(PostModel).filter_by(id=post_id).one_or_none()
+        if title is not None:
+            post.title = title
+        if description is not None:
+            post.description = description
+            post.tags = get_keywords(description)
+        db.commit()
+        print("===============================")
+        print(f"the post is updated, post_id: {post_id}.")
         print("===============================")
     except Exception as e:
         db.rollback()
