@@ -156,7 +156,7 @@ def decode_verify_token(token: str) -> int:
 
 
 
-def get_user_via_access_token(jwt_token_access_token, db: Session):
+def get_user_via_access_token(jwt_token_access_token: str, db: Session) -> UserModel:
     payload = jwt.decode(jwt_token_access_token, settings.JWT_SECRET_KEY, algorithms=ALGO)
     if payload['exp'] < int(time.time()):
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail='Token expired')
