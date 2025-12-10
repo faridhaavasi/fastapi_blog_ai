@@ -108,11 +108,9 @@ async def register_fin(request: RegisterFinallySchema, response: Response, db: S
     db.commit()
     db.refresh(user_obj)
 
-<<<<<<< HEAD
     mongo_db.liked_tags.insert_one({'id':user_id, 'tags':[]})
 
-=======
->>>>>>> origin/app/authentication
+
     jwt_access_token = generate_access_token(user_id)
     jwt_refresh_token = generate_refresh_token(user_id)
 
