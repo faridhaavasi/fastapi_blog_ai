@@ -30,13 +30,9 @@ class UserModel(Base):
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=True)
     is_active = Column(Boolean, default=False)
-<<<<<<< HEAD
-    is_verified = Column(Boolean, default=False)
-=======
+
 
     is_verified = Column(Boolean, default=False)
-
->>>>>>> origin/app/authentication
     is_admin = Column(Boolean, default=False)
     created_date = Column(DateTime, server_default=func.now())
     updated_date = Column(DateTime, server_default=func.now(), server_onupdate=func.now())
