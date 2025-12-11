@@ -14,10 +14,7 @@ from sqlalchemy.orm import relationship
 from service.core.database import Base
 
 
-# posts model
-class PostModel(Base):
-    __tablename__ = "posts"
-
+# PostModel
    
 class PostModel(Base):
     __tablename__ = "posts"

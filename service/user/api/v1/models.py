@@ -15,9 +15,9 @@ from service.core.database import Base
 
 from passlib.context import CryptContext
 
-from post.api.v1.models import PostModel
+from service.post.api.v1.models import PostModel
 
-from accounts.api.v1.models import AccountModel
+from service.accounts.api.v1.models import AccountModel
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
