@@ -1,3 +1,6 @@
+# Python
+import uuid
+
 # FastAPI
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
@@ -39,17 +42,34 @@ manager = ConnectionManager()
 
 
 
-@router.websocket("/ws/chat")
-async def chatbot_ws(websocket: WebSocket, user_id: int):
+@router.websocket("/chatbot")
+async def chatbot_ws(websocket: WebSocket):
     session_id = str(uuid.uuid4())
-    await manager.connect(session_id, websocket)
+    # 1️⃣ اول accept
+    await websocket.accept()
 
-    async with AsyncSessionLocal() as db:
-        try:
-            # 1️⃣ ارسال history موقع connect
+    # 2️⃣ AUTH از cookie
+    token = websocket.cookies.get("jwt_access_token")
+    if not token:
+        await websocket.close(code=1008)
+        return
+
+    try:
+        user = get_user_via_access_token(token)
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
+    # 3️⃣ فقط بعد از auth، ثبت connection
+    manager.active_connections[session_id] = websocket
+
+    try:
+        async with AsyncSessionLocal() as db:
+
+            # 4️⃣ load history
             result = await db.execute(
                 select(MessageModel)
-                .where(MessageModel.user_id == user_id)
+                .where(MessageModel.user_id == user.id)
                 .order_by(MessageModel.created_date)
                 .limit(50)
             )
@@ -57,68 +77,61 @@ async def chatbot_ws(websocket: WebSocket, user_id: int):
 
             for msg in history:
                 await manager.send_json(session_id, {
-                    "type": "history",
                     "role": msg.role,
                     "message": msg.message,
                     "created_date": msg.created_date.isoformat()
                 })
 
-            # 2️⃣ loop اصلی چت
+            # 5️⃣ loop اصلی چت
             while True:
                 user_message = await websocket.receive_text()
 
                 # ذخیره پیام کاربر
                 db.add(MessageModel(
-                    user_id=user_id,
+                    user_id=user.id,
                     role="user",
                     message=user_message
                 ))
                 await db.commit()
 
-                # ساخت context برای OpenAI
-                context = [
-                    {"role": msg.role, "content": msg.message}
-                    for msg in history
-                ]
-                context.append({"role": "user", "content": user_message})
-
                 full_response = ""
 
-                await manager.send_json(session_id, {"type": "start"})
-
-                async for token in stream_chat_response(context):
+                async for token in stream_chat_response(user_message):
                     full_response += token
                     await manager.send_json(session_id, {
                         "type": "stream",
                         "token": token
                     })
 
-                await manager.send_json(session_id, {"type": "end"})
-
                 # ذخیره پاسخ AI
                 db.add(MessageModel(
-                    user_id=user_id,
+                    user_id=user.id,
                     role="assistant",
                     message=full_response
                 ))
                 await db.commit()
 
-                # history رو به‌روز کن (برای پیام بعدی)
+                # history رو sync نگه دار
                 history.append(
-                    MessageModel(
-                        role="user",
-                        message=user_message
-                    )
+                    MessageModel(role="user", message=user_message)
                 )
                 history.append(
-                    MessageModel(
-                        role="assistant",
-                        message=full_response
-                    )
+                    MessageModel(role="assistant", message=full_response)
                 )
 
-        except WebSocketDisconnect:
-            manager.disconnect(session_id)
+    except WebSocketDisconnect:
+        pass
+
+    except Exception as e:
+        # rollback برای هر خطای غیرمنتظره
+        try:
+            await db.rollback()
+        except Exception:
+            pass
+        raise e
+
+    finally:
+        manager.disconnect(session_id)
 
 
 
