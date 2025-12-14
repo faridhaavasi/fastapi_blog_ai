@@ -3,23 +3,12 @@ import uuid
 
 # FastAPI
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List
 
 # SQLALCHEMY
-from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 # Database (postgresql)
 from service.core.database import get_db, AsyncSessionLocal
-
-# Database (mongodb)
-from service.core.database import mongo_db
-
-# chatbot app schemas
-from .schemas import (
-    GetAllMassageSchema,
-    UserSendMassageSchema,
-)
 
 # chatbot app models
 from .models import MessageModel
@@ -40,13 +29,12 @@ router = APIRouter(prefix="/chatbot/api/v1", tags=["chatbot_api_v1"])
 # chatbot app ws manager
 manager = ConnectionManager()
 
-
-
-@router.websocket("/chatbot")
+@router.websocket("/ws_chatbot")
 async def chatbot_ws(websocket: WebSocket):
     session_id = str(uuid.uuid4())
     # 1️⃣ اول accept
     await websocket.accept()
+    await websocket.send_text("✅ WebSocket Connected")
 
     # 2️⃣ AUTH از cookie
     token = websocket.cookies.get("jwt_access_token")

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot WS Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+    #messages div { margin-bottom: 5px; }
+    .user { color: blue; }
+    .assistant { color: green; }
+    .system { color: gray; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<h2>Chatbot WebSocket Demo</h2>
+
+<div id="messages"></div>
+
+<input type="text" id="inputMessage" placeholder="Type your message..." style="width: 70%;">
+<button id="sendBtn">Send</button>
+
+<script>
+  // JWT برای تست می‌توان از query param استفاده کرد یا cookie بخواند
+  const token = "PUT_YOUR_JWT_HERE"; // می‌توان این را از cookie هم گرفت
+
+  // مسیر WebSocket
+  const wsUrl = `ws://localhost:8000/chatbot/api/v1/ws_chatbot`;
+  const ws = new WebSocket(wsUrl);
+
+  const messagesDiv = document.getElementById("messages");
+  const input = document.getElementById("inputMessage");
+  const sendBtn = document.getElementById("sendBtn");
+
+  // پیام‌ها را اضافه می‌کنیم
+  function addMessage(role, message) {
+    const div = document.createElement("div");
+    div.className = role;
+    div.textContent = `${role}: ${message}`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  ws.onopen = () => {
+    console.log("Connected to WS");
+    addMessage("system", "WebSocket Connected");
+  };
+
+  ws.onmessage = (event) => {
+    let data;
+    try {
+      data = JSON.parse(event.data);
+    } catch {
+      data = { role: "system", message: event.data };
+    }
+
+    const role = data.role || "assistant";
+    const message = data.message || data.token || "";
+    addMessage(role, message);
+  };
+
+  ws.onerror = (err) => {
+    console.error("WS Error:", err);
+    addMessage("system", "WebSocket Error! Check console.");
+  };
+
+  ws.onclose = () => {
+    console.log("WS Closed");
+    addMessage("system", "WebSocket Closed");
+  };
+
+  // ارسال پیام
+  function sendMessage() {
+    const msg = input.value.trim();
+    if (!msg || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(msg);
+    addMessage("user", msg);
+    input.value = "";
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+</script>
+
+</body>
+</html>
