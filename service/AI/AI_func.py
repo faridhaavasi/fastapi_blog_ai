@@ -21,3 +21,15 @@ def get_keywords(description: str) -> str:
 
     keywords_text = response.choices[0].message.content.strip()
     return [k.strip() for k in keywords_text.split(",")]
+
+
+# async chat streamer
+async def stream_chat_response(messages: list):
+    response = openai_client.responses.stream(
+        model="gpt-4.1-mini",
+        input=messages,
+    )
+
+    for event in response:
+        if event.type == "response.output_text.delta":
+            yield event.delta
