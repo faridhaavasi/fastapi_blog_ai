@@ -4,13 +4,15 @@ from service.post.api.v1.models import PostModel
 from service.user.api.v1.models import UserModel
 from service.AI.AI_func import get_keywords
 from service.core.database import SessionLocal
+from contextlib import contextmanager
 
 
 logger = logging.getLogger(__name__)
 
 
+@contextmanager
 def db_session():
-    """Session manager for Celery (context manager)."""
+    """Session manager for Celery tasks."""
     db = SessionLocal()
     try:
         yield db

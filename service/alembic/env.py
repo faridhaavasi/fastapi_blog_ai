@@ -48,8 +48,8 @@ else:
 
 target_metadata = Base.metadata
 
-from user.api.v1.models import UserModel, TokenModel
-from post.api.v1.models import PostModel, LikeModel, CommentModel
+from service.user.api.v1.models import UserModel, TokenModel
+from service.post.api.v1.models import PostModel, LikeModel, CommentModel
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

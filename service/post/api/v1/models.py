@@ -15,7 +15,6 @@ from service.core.database import Base
 
 
 # PostModel
-   
 class PostModel(Base):
     __tablename__ = "posts"
 
