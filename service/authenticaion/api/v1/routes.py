@@ -140,8 +140,14 @@ async def set_token(request: SetTokenSchema, response: Response, db: Session = D
     jwt_access_token = generate_access_token(user.id)
     jwt_refresh_token = generate_refresh_token(user.id)
 
-    response.set_cookie(key='jwt_access_token', value=jwt_access_token)
-    response.set_cookie(key='jwt_refresh_token', value=jwt_refresh_token)
+    response.set_cookie(
+        key='jwt_access_token',
+        value=jwt_access_token,
+    )
+    response.set_cookie(
+        key='jwt_refresh_token',
+        value=jwt_refresh_token,
+    )
 
     return {"detail": "Tokens are set successfully"}
 
