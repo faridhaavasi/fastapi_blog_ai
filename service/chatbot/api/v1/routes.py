@@ -124,8 +124,10 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str = Cookie(None)):
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+
+    jwt_access_token = websocket.cookies.get("jwt_access_token")
 
     print("===================================")
     print("COOKIES:", websocket.cookies)

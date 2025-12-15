@@ -1,5 +1,7 @@
 from fastapi import APIRouter, status, Query, Path, Depends, HTTPException, Response
 
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
@@ -25,6 +27,8 @@ from service.auth.jwt_auth import (
     generate_verify_token,
     decode_verify_token,
 )
+
+security = HTTPBearer(auto_error=False)
 
 router = APIRouter(prefix="/auth/api/v1", tags=["authentication_api_v1"])
 
@@ -151,6 +155,9 @@ async def set_token(request: SetTokenSchema, response: Response, db: Session = D
 
     return {"detail": "Tokens are set successfully"}
 
+@router.get("/test_user", status_code=status.HTTP_200_OK)
+async def set_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    print(credentials)
 
 
 
