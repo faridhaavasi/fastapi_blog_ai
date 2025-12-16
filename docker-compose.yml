@@ -72,6 +72,8 @@ services:
       - mongodb
     environment:
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
       JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -94,6 +96,8 @@ services:
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
       JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
       REDIS_URL: redis://redis:6379/0
     working_dir: /usr/src
@@ -114,6 +118,8 @@ services:
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
       JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
       REDIS_URL: redis://redis:6379/0
     working_dir: /usr/src

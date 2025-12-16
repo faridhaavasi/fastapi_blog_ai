@@ -1,5 +1,5 @@
 # AI client
-from .AI_conf import openai_client
+from .AI_conf import openai_client, async_openai_client
 
 
 # get keywords from AI
@@ -21,3 +21,14 @@ def get_keywords(description: str) -> str:
 
     keywords_text = response.choices[0].message.content.strip()
     return [k.strip() for k in keywords_text.split(",")]
+
+# chatbot openai async client
+async def stream_chat_response(message):
+    async with async_openai_client.responses.stream(
+        model="gpt-4.1-mini",
+        input=message,
+    ) as response:
+
+        async for event in response:
+            if event.type == "response.output_text.delta":
+                yield event.delta

@@ -2,7 +2,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from service.user.api.v1.models import UserModel
 from service.core.database import get_db
+# SQLALCHEMY
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta,timezone
 import jwt
 from jwt import ExpiredSignatureError, InvalidSignatureError, DecodeError
@@ -161,6 +164,21 @@ def get_user_via_access_token(jwt_token_access_token: str, db: Session) -> UserM
     if payload['exp'] < int(time.time()):
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail='Token expired')
     user = db.query(UserModel).filter_by(id=payload['user_id']).one_or_none()
+    if user:
+        return user
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+
+
+
+
+async def get_user_via_access_token_async(jwt_token_access_token: str, db: AsyncSession) -> UserModel:
+    payload = jwt.decode(jwt_token_access_token, settings.JWT_SECRET_KEY, algorithms=ALGO)
+    if payload['exp'] < int(time.time()):
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail='Token expired')
+
+    result = await db.execute(select(UserModel).filter_by(id=payload['user_id']))
+    user = result.scalar_one_or_none()
+
     if user:
         return user
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')

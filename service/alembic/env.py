@@ -50,6 +50,7 @@ target_metadata = Base.metadata
 
 from service.user.api.v1.models import UserModel, TokenModel
 from service.post.api.v1.models import PostModel, LikeModel, CommentModel
+from service.chatbot.api.v1.models import MessageModel
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

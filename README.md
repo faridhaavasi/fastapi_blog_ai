@@ -17,6 +17,7 @@ Create a `.env` file in the **root directory** of the project (where `Dockerfile
 
 ```env
 SQLALCHEMY_DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/db_name
+ASYNC_SQLALCHEMY_DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/postgres
 JWT_SECRET_KEY=supersecretkey
 REDIS_URL=redis://redis:6379/0
 MONGO_URL=mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
