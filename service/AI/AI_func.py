@@ -25,7 +25,7 @@ def get_keywords(description: str) -> str:
 # chatbot openai async client
 async def stream_chat_response(message):
     async with async_openai_client.responses.stream(
-        model="gpt-4.1-mini",
+        model="gpt-4o-mini",
         input=message,
     ) as response:
 

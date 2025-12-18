@@ -17,6 +17,9 @@ from .models import MessageModel
 # JWT
 from service.auth.jwt_auth import get_user_via_access_token_async
 
+# AI
+from service.AI.AI_func import stream_chat_response
+
 
 # chatbot app router
 router = APIRouter(prefix="/chatbot/api/v1", tags=["chatbot_api_v1"])
@@ -44,8 +47,23 @@ async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
                 await websocket.send_text(f"{msg.role}: {msg.message}")
 
         while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"پیام شما دریافت شد: {data}")
+            user_message = await websocket.receive_text()
+
+            await websocket.send_text(f"you: {user_message}")
+
+            new_user_message = MessageModel(user_id=user.id, role='user', message=user_message)
+
+            db.add(new_user_message)
+            db.commit()
+
+            ai_message = stream_chat_response(user_message)
+
+            new_ai_message = MessageModel(user_id=user.id, role='ai', message=ai_message)
+
+            db.add(new_ai_message)
+            db.commit()
+
+            await websocket.send_text(f"AI: {ai_message}")
     except WebSocketDisconnect:
         print("Client disconnected")
     except HTTPException:
