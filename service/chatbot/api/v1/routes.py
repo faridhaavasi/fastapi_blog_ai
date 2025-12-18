@@ -1,16 +1,14 @@
 # Python
-import uuid
-from pyexpat.errors import messages
 from urllib.parse import unquote
 
 # FastAPI
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Cookie, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 
 # SQLALCHEMY
 from sqlalchemy import select
 
 # Database (postgresql)
-from service.core.database import get_db, AsyncSessionLocal
+from service.core.database import AsyncSessionLocal
 
 # chatbot app models
 from .models import MessageModel
@@ -66,7 +64,6 @@ async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
                     ai_chunks.append(chunk)
                     await websocket.send_text(chunk)
 
-                # 4️⃣ تبدیل استریم به متن کامل
                 ai_message = "".join(ai_chunks)
 
                 prefixes = [
