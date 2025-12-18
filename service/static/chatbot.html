@@ -4,56 +4,137 @@
   <meta charset="UTF-8">
   <title>Chatbot WS</title>
   <style>
-    body { font-family: sans-serif; }
+    body {
+      font-family: sans-serif;
+      direction: ltr;
+    }
+
     #messages {
       border: 1px solid #ccc;
-      height: 300px;
+      height: 350px;
       overflow-y: auto;
       padding: 10px;
       margin-bottom: 10px;
+      background: #fafafa;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 8px 12px;
+      margin: 6px 0;
+      border-radius: 8px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background-color: #e0e0e0;
+      align-self: flex-end;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .ai {
+      background-color: #dbeafe;
+      align-self: flex-start;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .system {
+      color: #666;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
 <body>
 
-<h2>Chatbot WebSocket Test</h2>
+<h2>Chatbot</h2>
 
 <div id="messages"></div>
 
-<input id="input" type="text" placeholder="پیام را بنویس..." />
-<button onclick="sendMessage()">ارسال</button>
+<input id="input" type="text" placeholder="write your message" />
+<button onclick="sendMessage()">send</button>
 
 <script>
   const messagesDiv = document.getElementById("messages");
   const input = document.getElementById("input");
 
-  function addMessage(text) {
-    const p = document.createElement("p");
-    p.textContent = text;
-    messagesDiv.appendChild(p);
+  let currentAiBubble = null;
+
+  function addSystemMessage(text) {
+    const div = document.createElement("div");
+    div.className = "system";
+    div.textContent = text;
+    messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // JWT از FastAPI مستقیماً در template جایگزین می‌شود
-  const jwtAccessToken = "{{JWT_TOKEN}}"; // این مقدار از backend جایگزین می‌شود
-  const ws = new WebSocket(`ws://localhost:8000/chatbot/api/v1/ws/${encodeURIComponent(jwtAccessToken)}`);
+  function addUserMessage(text) {
+    const div = document.createElement("div");
+    div.className = "message user";
+    div.textContent = text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
 
-  ws.onopen = () => addMessage("✅ connected");
-  ws.onmessage = (event) => addMessage("🧠 server: " + event.data);
-  ws.onclose = (e) => addMessage("❌ disconnected: " + e.code);
-  ws.onerror = (e) => addMessage("⚠️ ws error");
+  function appendAiChunk(chunk) {
+    if (!currentAiBubble) {
+      currentAiBubble = document.createElement("div");
+      currentAiBubble.className = "message ai";
+      messagesDiv.appendChild(currentAiBubble);
+    }
+
+    currentAiBubble.textContent += chunk;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  const jwtAccessToken = "{{JWT_TOKEN}}";
+
+  const ws = new WebSocket(
+    `ws://localhost:8000/chatbot/api/v1/ws/${encodeURIComponent(jwtAccessToken)}`
+  );
+
+  ws.onopen = () => {
+    addSystemMessage("✅ connected");
+  };
+
+  ws.onmessage = (event) => {
+    appendAiChunk(event.data);
+  };
+
+  ws.onclose = (e) => {
+    addSystemMessage("❌ disconnected: " + e.code);
+  };
+
+  ws.onerror = () => {
+    addSystemMessage("⚠️ ws error");
+  };
 
   function sendMessage() {
-    const text = input.value;
+    const text = input.value.trim();
     if (!text) return;
 
     ws.send(text);
-    addMessage("👤 you: " + text);
+    addUserMessage(text);
+
+    // آماده برای پاسخ AI جدید
+    currentAiBubble = null;
+
     input.value = "";
   }
 
   input.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") sendMessage();
+    if (e.key === "Enter") {
+      sendMessage();
+    }
   });
 </script>
 

@@ -1,5 +1,6 @@
 # Python
 import uuid
+from pyexpat.errors import messages
 from urllib.parse import unquote
 
 # FastAPI
@@ -37,33 +38,53 @@ async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
 
     try:
         async with AsyncSessionLocal() as db:
+
             user = await get_user_via_access_token_async(jwt_access_token, db)
-            messages = await db.execute(
+
+            result = await db.execute(
                 select(MessageModel)
                 .where(MessageModel.user_id == user.id)
                 .order_by(MessageModel.created_date)
             )
+
+            messages = result.scalars().all()
+
             for msg in messages:
                 await websocket.send_text(f"{msg.role}: {msg.message}")
 
-        while True:
-            user_message = await websocket.receive_text()
+            while True:
+                user_message = await websocket.receive_text()
 
-            await websocket.send_text(f"you: {user_message}")
+                new_user_message = MessageModel(user_id=user.id, role='user', message=user_message)
 
-            new_user_message = MessageModel(user_id=user.id, role='user', message=user_message)
+                db.add(new_user_message)
+                await db.commit()
 
-            db.add(new_user_message)
-            db.commit()
+                ai_chunks = []
 
-            ai_message = stream_chat_response(user_message)
+                async for chunk in stream_chat_response(user_message):
+                    ai_chunks.append(chunk)
+                    await websocket.send_text(chunk)
 
-            new_ai_message = MessageModel(user_id=user.id, role='ai', message=ai_message)
+                # 4️⃣ تبدیل استریم به متن کامل
+                ai_message = "".join(ai_chunks)
 
-            db.add(new_ai_message)
-            db.commit()
+                prefixes = [
+                    f"you: {user_message}",
+                    f"user: {user_message}",
+                    user_message
+                ]
+                for p in prefixes:
+                    if ai_message.lower().startswith(p.lower()):
+                        ai_message = ai_message[len(p):].lstrip()
 
-            await websocket.send_text(f"AI: {ai_message}")
+                ai_msg = MessageModel(
+                    user_id=user.id,
+                    role="ai",
+                    message=ai_message
+                )
+                db.add(ai_msg)
+                await db.commit()
     except WebSocketDisconnect:
         print("Client disconnected")
     except HTTPException:

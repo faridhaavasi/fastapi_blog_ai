@@ -23,10 +23,23 @@ def get_keywords(description: str) -> str:
     return [k.strip() for k in keywords_text.split(",")]
 
 # chatbot openai async client
-async def stream_chat_response(message):
+async def stream_chat_response(message: str):
     async with async_openai_client.responses.stream(
         model="gpt-4o-mini",
-        input=message,
+        input=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful assistant. "
+                    "Never repeat, quote, or echo the user's message. "
+                    "Answer directly without prefixes like 'you:' or 'user:'."
+                )
+            },
+            {
+                "role": "user",
+                "content": message
+            }
+        ],
     ) as response:
 
         async for event in response:
