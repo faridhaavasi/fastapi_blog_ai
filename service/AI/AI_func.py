@@ -1,6 +1,8 @@
 # AI client
 from .AI_conf import openai_client, async_openai_client
 
+from typing import List
+
 
 # get keywords from AI
 def get_keywords(description: str) -> str:
@@ -22,7 +24,8 @@ def get_keywords(description: str) -> str:
     keywords_text = response.choices[0].message.content.strip()
     return [k.strip() for k in keywords_text.split(",")]
 
-# chatbot openai async client
+
+# chatbot openai async client for chatbot
 async def stream_chat_response(message: str):
     async with async_openai_client.responses.stream(
         model="gpt-4o-mini",
@@ -40,6 +43,37 @@ async def stream_chat_response(message: str):
                 "content": message
             }
         ],
+    ) as response:
+
+        async for event in response:
+            if event.type == "response.output_text.delta":
+                yield event.delta
+
+
+# chatbot openai async client for post chatbot
+async def stream_chat_response_post(message: str, last_posts: List[str]):
+    posts_context = "\n".join(f"- {post}" for post in last_posts)
+
+    async with async_openai_client.responses.stream(
+            model="gpt-4o-mini",
+            input=[
+                {
+                    "role": "system",
+                    "content": (
+                            "You are a professional content writing assistant.\n"
+                            "Your job is to help the user write better posts.\n"
+                            "Analyze the user's previous posts to understand their tone, "
+                            "style, strengths, and weaknesses.\n"
+                            "Do NOT repeat or quote the user's message.\n"
+                            "Do NOT use prefixes like 'user:' or 'you:'.\n\n"
+                            f"User's previous posts:\n{posts_context}"
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ],
     ) as response:
 
         async for event in response:

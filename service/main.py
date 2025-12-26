@@ -14,10 +14,19 @@ app.include_router(chatbot_v1_route.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/chatbot_demo/{jwt_access_token}", response_class=HTMLResponse)
+@app.get("/chatbot/{jwt_access_token}", response_class=HTMLResponse)
 async def chatbot_demo(jwt_access_token: str):
     # فایل HTML را باز می‌کنیم
     with open("static/chatbot.html") as f:
+        html_content = f.read()
+    # مقدار JWT جایگزین template می‌شود
+    html_content = html_content.replace("{{JWT_TOKEN}}", jwt_access_token)
+    return HTMLResponse(content=html_content)
+
+@app.get("/post_chatbot/{jwt_access_token}", response_class=HTMLResponse)
+async def chatbot_demo(jwt_access_token: str):
+    # فایل HTML را باز می‌کنیم
+    with open("static/post_chatbot.html") as f:
         html_content = f.read()
     # مقدار JWT جایگزین template می‌شود
     html_content = html_content.replace("{{JWT_TOKEN}}", jwt_access_token)

@@ -150,6 +150,26 @@ async def set_token(request: SetTokenSchema, response: Response, db: Session = D
         value=jwt_refresh_token
     )
 
+    return {"detail": "tokens are set successfully"}
+
+
+@router.post("/register/get_token", status_code=status.HTTP_200_OK)
+async def set_token(request: SetTokenSchema, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter_by(email=request.email).one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="somthing went wrong"
+        )
+
+    if user.verify_password(request.password) is False:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="email or password is wrong"
+        )
+
+    jwt_access_token = generate_access_token(user.id)
+
     return JSONResponse(
         content={
             "detail": "Tokens are set successfully",
