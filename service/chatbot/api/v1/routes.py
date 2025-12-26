@@ -93,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
 
 # Post Chat Bot
 @router.websocket("/post_ws/{jwt_access_token}")
-async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
+async def websocket_endpoint_post(websocket: WebSocket, jwt_access_token: str):
     await websocket.accept()
 
     jwt_access_token = unquote(jwt_access_token)
@@ -109,7 +109,7 @@ async def websocket_endpoint(websocket: WebSocket, jwt_access_token: str):
             user = await get_user_via_access_token_async(jwt_access_token, db)
 
             result = await db.execute(
-                select(PostModel)
+                select(PostModel.description)
                 .where(PostModel.user_id == user.id)
                 .order_by(PostModel.created_date.desc())
                 .limit(5)
