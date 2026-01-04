@@ -70,8 +70,10 @@ services:
 
   celery_worker:
     image: myapp-backend:latest
-    command: celery -A service.celery_config.celery_conf worker --loglevel=info
+    working_dir: /usr/src
+    command: python -m celery -A service.celery_config.celery_conf:celery_app worker --loglevel=info
     environment:
+      PYTHONPATH: /usr/src
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
       ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
@@ -88,8 +90,10 @@ services:
 
   celery_beat:
     image: myapp-backend:latest
-    command: celery -A service.celery_config.celery_conf beat --loglevel=info
+    working_dir: /usr/src
+    command: python -m celery -A service.celery_config.celery_conf:celery_app beat --loglevel=info
     environment:
+      PYTHONPATH: /usr/src
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
       ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
       MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
