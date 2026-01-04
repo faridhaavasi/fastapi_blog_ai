@@ -52,9 +52,11 @@ services:
     image: myapp-backend:latest
     environment:
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
-      REDIS_URL: redis://redis:6379/0
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
       JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: 
     ports:
       - "8000:8000"
     deploy:
@@ -70,9 +72,12 @@ services:
     image: myapp-backend:latest
     command: celery -A service.celery_config.celery_conf worker --loglevel=info
     environment:
-      REDIS_URL: redis://redis:6379/0
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
+      JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY:
     deploy:
       replicas: 2
       restart_policy:
@@ -85,9 +90,12 @@ services:
     image: myapp-backend:latest
     command: celery -A service.celery_config.celery_conf beat --loglevel=info
     environment:
-      REDIS_URL: redis://redis:6379/0
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ASYNC_SQLALCHEMY_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/postgres
+      MONGO_URL: mongodb://mongo:mongo@mongodb:27017/mydb?authSource=admin
+      JWT_SECRET_KEY: z_f%#7x&0!n6uuamyca%y5swv1(9e=u=wu9s#wy(3f-k__k777
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY:
     deploy:
       replicas: 1
       restart_policy:
